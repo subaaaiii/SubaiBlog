@@ -1,0 +1,89 @@
+@extends('dashboard.layouts.main')
+
+@section('main')
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Create Post</h1>
+    </div>
+    <div class="col-md-9">
+        <form action="/dashboard/posts" method="POST" enctype="multipart/form-data">
+            @csrf
+            <div class="mb-3">
+              <label for="title" class="form-label">Title</label>
+              <input type="text" class="form-control @error('title') is-invalid @enderror" id="title" name="title" value="{{ old('title') }}" autofocus>
+              @error('title') 
+                <div class="invalid-feedback">
+                  {{ $message }}
+                </div>
+              @enderror
+            </div>
+            <div class="mb-3">
+              <label for="slug" class="form-label">Slug</label>
+              <input type="text" class="form-control @error('slug') is-invalid @enderror" id="slug" name="slug" value="{{ old('slug') }}">
+              @error('slug') 
+                <div class="invalid-feedback">
+                  {{ $message }}
+                </div>
+              @enderror
+            </div>
+            <div class="mb-3">
+              <label for="category" class="form-label">Category</label>
+              <select class="form-select" name="category_id">
+                @foreach ($categories as $category)
+                @if($category->id == old('category_id'))
+                  <option value="{{ $category->id }}" selected>{{ $category->name }}</option>
+                @endif
+                <option value="{{ $category->id }}">{{ $category->name }}</option>
+                @endforeach
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="image" class="form-label">Upload image</label>
+                <img class="img-preview fluid mb-3 col-md-5" style="max-height: 180px; object-fit: cover; object-position: top; overflow: hidden">
+              <input class="form-control @error('image') is-invalid @enderror" type="file" id="image" name="image" onchange="previewImage()" placeholder="Sorry gaes" @disabled(true)>
+              <small><p><i class="bi bi-info-circle-fill"></i> Sorry gaes, image di disable dulu, keterbatasan fitur hosting gratis haha <br><i class="bi bi-info-circle-fill"></i> Tapi tenang, postingan akan diberikan gambar otomatis</p></small>
+              @error('image') 
+                <div class="invalid-feedback">
+                  {{ $message }}
+                </div>
+              @enderror
+            </div>
+            <div class="mb-3">
+              <label for="category" class="form-label">Body</label>
+              @error('body')
+              <p class="text-danger">{{ $message }}</p>
+              @enderror
+              <input id="body" type="hidden" name="body" value="{{ old('body') }}">
+                <trix-editor input="body"></trix-editor>
+            </div>
+            <button type="submit" class="btn btn-primary">Create Post</button>
+          </form>
+    </div>
+<script>
+    const title = document.querySelector('#title');
+    const slug = document.querySelector('#slug');
+
+    title.addEventListener('change', function(){
+        fetch('/dashboard/posts/checkSlug?title=' + title.value)
+        .then(response => response.json())
+        .then(data => slug.value = data.slug)
+    });
+
+    document.addEventListener('trix-file-accept', function(e){
+        e.preventDefault();
+    })
+
+    function previewImage(){
+      const image = document.querySelector('#image');
+      const imgPreview = document.querySelector('.img-preview');
+
+      imgPreview.style.display = 'block';
+
+      const oFReader = new FileReader();
+      oFReader.readAsDataURL(image.files[0]);
+
+      oFReader.onload = function(oFREvent){
+        imgPreview.src = oFREvent.target.result;
+      }
+    }
+</script>
+@endsection
